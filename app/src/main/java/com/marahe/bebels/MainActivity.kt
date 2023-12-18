@@ -133,32 +133,35 @@ class MainActivity : AppCompatActivity() {
                 override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
                     try {
                         val url = request?.url.toString()
+                        if (url.startsWith(BASE_URL)) {
+                            val connection = URL(url).openConnection() as HttpURLConnection
+                            connection.setRequestProperty("Authorization", headers["Authorization"])
+                            connection.connect()
 
-                        // Crear una nueva solicitud con los headers de autorización
-                        val connection = URL(url).openConnection() as HttpURLConnection
-                        connection.setRequestProperty("Authorization", headers["Authorization"])
-                        connection.connect()
+                            // Leer la respuesta como texto
+                            val stream = connection.inputStream
+                            val responseString = stream.bufferedReader().use { it.readText() }
+                            stream.close()
 
-                        // Leer la respuesta como texto
-                        val stream = connection.inputStream
-                        val responseString = stream.bufferedReader().use { it.readText() }
-                        stream.close()
-
-                        // Crear una nueva respuesta con el contenido leído como texto
-                        val contentType = connection.contentType
-                        val encoding = connection.contentEncoding
-                        val responseHeaders = HashMap<String, String>()
-                        for (key in connection.headerFields.keys) {
-                            val values = connection.headerFields[key]
-                            if (values != null && key != null) {
-                                responseHeaders[key] = values.joinToString(";")
+                            // Crear una nueva respuesta con el contenido leído como texto
+                            val contentType = connection.contentType
+                            val encoding = connection.contentEncoding
+                            val headers = HashMap<String, String>()
+                            for (key in connection.headerFields.keys) {
+                                val values = connection.headerFields[key]
+                                if (values != null && key != null) {
+                                    headers[key] = values.joinToString(";")
+                                }
                             }
+                            return WebResourceResponse(contentType, encoding, 200, "OK", headers, ByteArrayInputStream(responseString.toByteArray(Charsets.UTF_8)))
+                        } else {
+                            return super.shouldInterceptRequest(view, request)
                         }
-                        return WebResourceResponse(contentType, encoding, 200, "OK", responseHeaders, ByteArrayInputStream(responseString.toByteArray(Charsets.UTF_8)))
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
                     return super.shouldInterceptRequest(view, request)
+
                 }
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                     view?.loadUrl(request?.url.toString())
@@ -167,22 +170,6 @@ class MainActivity : AppCompatActivity() {
 
                 }
             }
-
-
-
-
-            val action = intent?.action
-            val data = intent?.data
-            if (Intent.ACTION_VIEW == action && data != null) {
-                // Concatena la parte del path del enlace con BASE_URL
-                val fullPath = BASE_URL + data.path
-                loadUrl(fullPath)
-            } else {
-                // Carga la URL base si no se inició con un enlace profundo
-                loadUrl(BASE_URL)
-            }
-
-
 
 
             settings.apply {
@@ -195,7 +182,6 @@ class MainActivity : AppCompatActivity() {
                 displayZoomControls = false
                 setSupportZoom(false)
             }
-
             // Agregar headers de autenticación
             headers["Authorization"] = "Basic " + Base64.encodeToString("username:password".toByteArray(), Base64.NO_WRAP)
             loadUrl(BASE_URL)

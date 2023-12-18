@@ -131,20 +131,37 @@ class MainActivity : AppCompatActivity() {
 
 
                 override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
-                    // Verificar si la URL comienza con BASE_URL para agregar headers de autorización
-                    if (request?.url.toString().startsWith(BASE_URL)) {
-                        try {
-                            val url = request?.url.toString()
+                    try {
+                        val url = request?.url.toString()
+                        if (url.startsWith(BASE_URL)) {
                             val connection = URL(url).openConnection() as HttpURLConnection
                             connection.setRequestProperty("Authorization", headers["Authorization"])
-                            return super.shouldInterceptRequest(view, request)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
+                            connection.connect()
 
-                    // Manejar todas las demás solicitudes normalmente
+                            // Leer la respuesta como texto
+                            val stream = connection.inputStream
+                            val responseString = stream.bufferedReader().use { it.readText() }
+                            stream.close()
+
+                            // Crear una nueva respuesta con el contenido leído como texto
+                            val contentType = connection.contentType
+                            val encoding = connection.contentEncoding
+                            val headers = HashMap<String, String>()
+                            for (key in connection.headerFields.keys) {
+                                val values = connection.headerFields[key]
+                                if (values != null && key != null) {
+                                    headers[key] = values.joinToString(";")
+                                }
+                            }
+                            return WebResourceResponse(contentType, encoding, 200, "OK", headers, ByteArrayInputStream(responseString.toByteArray(Charsets.UTF_8)))
+                        } else {
+                            return super.shouldInterceptRequest(view, request)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                     return super.shouldInterceptRequest(view, request)
+
                 }
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                     view?.loadUrl(request?.url.toString())

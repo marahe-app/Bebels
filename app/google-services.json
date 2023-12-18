@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "804883540211",
+    "project_id": "bebels",
+    "storage_bucket": "bebels.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:804883540211:android:68555a6f92df995eb62f86",
+        "android_client_info": {
+          "package_name": "com.marahe.bebels"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCofraLkQw5aALUWPYEzq9zzv2eNWTisNw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

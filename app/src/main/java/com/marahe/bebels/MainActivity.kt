@@ -184,7 +184,8 @@ class MainActivity : AppCompatActivity() {
             }
             // Agregar headers de autenticación
             headers["Authorization"] = "Basic " + Base64.encodeToString("username:password".toByteArray(), Base64.NO_WRAP)
-            loadUrl(BASE_URL)
+            val deepLinkUrl = intent?.data?.toString() ?: BASE_URL
+            loadUrl(deepLinkUrl)
         }
     }
 
